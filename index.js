@@ -64,8 +64,8 @@ bot.on('callback_query', (cbQuery) => {
     });
     newSuggestion.save()
         .then(() => {
-            // bot.deleteMessage(cbQuery.message.chat.id, cbQuery.message.message_id);
-            bot.sendMessage(cbQuery.message.chat.id, sender + ' ' + suggestion + ' ' + category);
+            bot.deleteMessage(cbQuery.message.chat.id, cbQuery.message.message_id);
+            bot.sendMessage(cbQuery.message.chat.id, sender + ' suggested <b>' + suggestion + '</b> ' + category, {parse_mode: 'HTML'});
         })
 });
 
