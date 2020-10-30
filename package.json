@@ -11,6 +11,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "mongoose": "^5.10.11",
-    "node-telegram-bot-api": "^0.50.0"
+    "node-telegram-bot-api": "^0.50.0",
+    "node-telegram-keyboard-wrapper": "^2.0.1"
   }
 }

@@ -1,4 +1,6 @@
 const TelegramBot = require('node-telegram-bot-api');
+const ReplyKeyboard = require('node-telegram-keyboard-wrapper').ReplyKeyboard;
+const InlineKeyboard = require('node-telegram-keyboard-wrapper').InlineKeyboard;
 const config = require('./config');
 const mongoose = require('mongoose');
 const Suggestion = require('./suggestion');
@@ -93,6 +95,20 @@ bot.onText(/\/viewbycategory/, (msg, match) => {
     });
 });
 
+bot.onText(/\/removesuggestion/, (msg, match) => {
+    Suggestion.find({ suggestedBy: msg.from.first_name + ' ' + msg.from.last_name })
+        .then((suggestions) => {
+            const reply = new InlineKeyboard();
+            suggestions.forEach((suggestion) => {
+                reply.addRow({
+                    text: suggestion.suggestion,
+                    callback_data: suggestion.suggestion
+                });
+            });
+            bot.sendMessage(msg.chat.id, 'Remove', reply.build());
+        });
+});
+
 bot.on('callback_query', (cbQuery) => {
     console.log(cbQuery);
     switch (cbQuery.message.text) {
@@ -131,6 +147,15 @@ bot.on('callback_query', (cbQuery) => {
                     bot.sendMessage(cbQuery.message.chat.id, reply, { parse_mode: 'html' });
                 })
                 .catch((err) => console.log);
+            break;
+        case 'Remove':
+            Suggestion.deleteOne({ suggestedBy: cbQuery.message.chat.first_name + ' ' + cbQuery.message.chat.last_name, suggestion: cbQuery.data })
+                .then((_) => {
+                    bot.sendMessage(cbQuery.message.chat.id, cbQuery.message.chat.first_name + ' ' + cbQuery.message.chat.last_name + ' removed <b>' + cbQuery.data + '</b> ', { parse_mode: 'html' });
+                })
+                .catch((err) => {
+                    bot.sendMessage(cbQuery.message.chat.id, 'An error occured. Please try again later.');
+                });
             break;
     }
     bot.deleteMessage(cbQuery.message.chat.id, cbQuery.message.message_id);
