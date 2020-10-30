@@ -16,29 +16,24 @@ mongoose.connect(config.dbConn, { useNewUrlParser: true, useUnifiedTopology: tru
 const bot = new TelegramBot(config.botToken, { polling: true });
 
 let sender, suggestion, category;
+const categories = new InlineKeyboard();
+categories.addRow({
+    text: 'Movie',
+    callback_data: 'movie'
+});
+categories.addRow({
+    text: 'Series',
+    callback_data: 'series'
+});
+categories.addRow({
+    text: 'Others',
+    callback_data: 'others'
+});
 bot.onText(/\/suggest (.+)/, (msg, match) => {
     sender = msg.from.first_name + ' ' + msg.from.last_name;
     suggestion = match[1];
     console.log(sender, suggestion);
-    bot.sendMessage(msg.chat.id, 'Add to Category', {
-        reply_markup: {
-            one_time_keyboard: true,
-            inline_keyboard: [[
-                {
-                    text: 'Movie',
-                    callback_data: 'movie'
-                },
-                {
-                    text: 'Series',
-                    callback_data: 'series'
-                },
-                {
-                    text: 'Others',
-                    callback_data: 'others'
-                }
-            ]]
-        }
-    });
+    bot.sendMessage(msg.chat.id, 'Add to Category', categories.build());
 });
 
 bot.onText(/\/viewlatest/, (msg, match) => {
@@ -59,40 +54,17 @@ bot.onText(/\/viewlatest/, (msg, match) => {
 bot.onText(/\/viewbyuser/, (msg, match) => {
     Suggestion.find({}).distinct('suggestedBy')
         .then((suggestors) => {
-            let users = [];
+            const users = new InlineKeyboard();
             suggestors.forEach((suggestor) => {
-                users.push({ text: suggestor, callback_data: suggestor });
+                users.addRow({ text: suggestor, callback_data: suggestor });
             });
-            bot.sendMessage(msg.chat.id, 'Choose User', {
-                reply_markup: {
-                    one_time_keyboard: true,
-                    inline_keyboard: [users]
-                }
-            });
+            bot.sendMessage(msg.chat.id, 'Choose User', users.build());
         })
         .catch((err) => console.log);
 });
 
 bot.onText(/\/viewbycategory/, (msg, match) => {
-    bot.sendMessage(msg.chat.id, 'Choose Category', {
-        reply_markup: {
-            one_time_keyboard: true,
-            inline_keyboard: [[
-                {
-                    text: 'Movie',
-                    callback_data: 'movie'
-                },
-                {
-                    text: 'Series',
-                    callback_data: 'series'
-                },
-                {
-                    text: 'Others',
-                    callback_data: 'others'
-                }
-            ]]
-        }
-    });
+    bot.sendMessage(msg.chat.id, 'Choose Category', categories.build());
 });
 
 bot.onText(/\/removesuggestion/, (msg, match) => {
