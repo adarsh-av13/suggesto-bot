@@ -32,13 +32,11 @@ categories.addRow({
 bot.onText(/\/suggest (.+)/, (msg, match) => {
     sender = msg.from.first_name + ' ' + msg.from.last_name;
     suggestion = match[1];
-    console.log(sender, suggestion);
     bot.sendMessage(msg.chat.id, 'Add to Category', categories.build());
 });
 
 bot.onText(/\/viewlatest/, (msg, match) => {
     sender = msg.from.first_name + ' ' + msg.from.last_name;
-    console.log(sender);
     Suggestion.find({}).sort({ 'createdAt': -1 }).limit(5)
         .then((suggestions) => {
             let reply = '<b><u>Recent Recommendations</u></b>\n\n';
@@ -82,7 +80,7 @@ bot.onText(/\/removesuggestion/, (msg, match) => {
 });
 
 bot.on('callback_query', (cbQuery) => {
-    console.log(cbQuery);
+    console.log("ada",cbQuery);
     switch (cbQuery.message.text) {
         case 'Add to Category':
             category = cbQuery.data;
@@ -121,9 +119,9 @@ bot.on('callback_query', (cbQuery) => {
                 .catch((err) => console.log);
             break;
         case 'Remove':
-            Suggestion.deleteOne({ suggestedBy: cbQuery.message.chat.first_name + ' ' + cbQuery.message.chat.last_name, suggestion: cbQuery.data })
+            Suggestion.deleteOne({ suggestedBy: cbQuery.from.first_name + ' ' + cbQuery.from.last_name, suggestion: cbQuery.data })
                 .then((_) => {
-                    bot.sendMessage(cbQuery.message.chat.id, cbQuery.message.chat.first_name + ' ' + cbQuery.message.chat.last_name + ' removed <b>' + cbQuery.data + '</b> ', { parse_mode: 'html' });
+                    bot.sendMessage(cbQuery.message.chat.id, cbQuery.from.first_name + ' ' + cbQuery.from.last_name + ' removed <b>' + cbQuery.data + '</b> ', { parse_mode: 'html' });
                 })
                 .catch((err) => {
                     bot.sendMessage(cbQuery.message.chat.id, 'An error occured. Please try again later.');
