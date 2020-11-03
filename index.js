@@ -30,8 +30,14 @@ categories.addRow({
     callback_data: 'others'
 });
 bot.onText(/\/suggest (.+)/, (msg, match) => {
-    sender = msg.from.first_name + ' ' + msg.from.last_name;
+    console.log(msg);
+    sender = msg.from.username;
+    if(!sender)
+        return bot.sendMessage(msg.chat.id, 'Please set your username on Telegram to use this service.');
     suggestion = match[1];
+    suggestion = suggestion.trim();
+    suggestion = suggestion.toLowerCase();
+    suggestion = suggestion.replace(/\w\S*/g, (w) => (w.replace(/^\w/, (c) => c.toUpperCase())));
     bot.sendMessage(msg.chat.id, 'Add to Category', categories.build());
 });
 
@@ -66,7 +72,10 @@ bot.onText(/\/viewbycategory/, (msg, match) => {
 });
 
 bot.onText(/\/removesuggestion/, (msg, match) => {
-    Suggestion.find({ suggestedBy: msg.from.first_name + ' ' + msg.from.last_name })
+    sender = msg.from.username;
+    if(!sender)
+        return bot.sendMessage(msg.chat.id, 'Please set your username on Telegram to use this service.');
+    Suggestion.find({ suggestedBy: sender })
         .then((suggestions) => {
             const reply = new InlineKeyboard();
             suggestions.forEach((suggestion) => {
@@ -80,7 +89,6 @@ bot.onText(/\/removesuggestion/, (msg, match) => {
 });
 
 bot.on('callback_query', (cbQuery) => {
-    console.log("ada",cbQuery);
     switch (cbQuery.message.text) {
         case 'Add to Category':
             category = cbQuery.data;
@@ -91,7 +99,10 @@ bot.on('callback_query', (cbQuery) => {
             });
             newSuggestion.save()
                 .then(() => {
-                    bot.sendMessage(cbQuery.message.chat.id, sender + ' suggested <b>' + suggestion + '</b> ' + category, { parse_mode: 'HTML' });
+                    bot.sendMessage(cbQuery.message.chat.id, sender + ' suggested <b>' + suggestion + '</b> (' + category + ')', { parse_mode: 'HTML' });
+                })
+                .catch(err => {
+                    bot.sendMessage(cbQuery.message.chat.id, 'Operation Failed. The item you entered is a duplicate.');
                 });
             break;
         case 'Choose User':
@@ -119,9 +130,9 @@ bot.on('callback_query', (cbQuery) => {
                 .catch((err) => console.log);
             break;
         case 'Remove':
-            Suggestion.deleteOne({ suggestedBy: cbQuery.from.first_name + ' ' + cbQuery.from.last_name, suggestion: cbQuery.data })
+            Suggestion.deleteOne({ suggestedBy: cbQuery.from.username, suggestion: cbQuery.data })
                 .then((_) => {
-                    bot.sendMessage(cbQuery.message.chat.id, cbQuery.from.first_name + ' ' + cbQuery.from.last_name + ' removed <b>' + cbQuery.data + '</b> ', { parse_mode: 'html' });
+                    bot.sendMessage(cbQuery.message.chat.id, cbQuery.from.username + ' removed <b>' + cbQuery.data + '</b> ', { parse_mode: 'html' });
                 })
                 .catch((err) => {
                     bot.sendMessage(cbQuery.message.chat.id, 'An error occured. Please try again later.');

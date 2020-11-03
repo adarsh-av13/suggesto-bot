@@ -16,5 +16,7 @@ const suggestionSchema = new Schema({
     },
 }, {timestamps: true});
 
+suggestionSchema.index({suggestedBy: 1, suggestion: 1, category: 1}, {unique: true});
+
 let Suggestion = mongoose.model('Suggestion', suggestionSchema);
 module.exports = Suggestion;
