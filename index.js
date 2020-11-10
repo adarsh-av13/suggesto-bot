@@ -32,7 +32,7 @@ categories.addRow({
 bot.onText(/\/suggest (.+)/, (msg, match) => {
     console.log(msg);
     sender = msg.from.username;
-    if(!sender)
+    if (!sender)
         return bot.sendMessage(msg.chat.id, 'Please set your username on Telegram to use this service.');
     suggestion = match[1];
     suggestion = suggestion.trim();
@@ -42,7 +42,6 @@ bot.onText(/\/suggest (.+)/, (msg, match) => {
 });
 
 bot.onText(/\/viewlatest/, (msg, match) => {
-    sender = msg.from.first_name + ' ' + msg.from.last_name;
     Suggestion.find({}).sort({ 'createdAt': -1 }).limit(5)
         .then((suggestions) => {
             let reply = '<b><u>Recent Recommendations</u></b>\n\n';
@@ -73,7 +72,7 @@ bot.onText(/\/viewbycategory/, (msg, match) => {
 
 bot.onText(/\/removesuggestion/, (msg, match) => {
     sender = msg.from.username;
-    if(!sender)
+    if (!sender)
         return bot.sendMessage(msg.chat.id, 'Please set your username on Telegram to use this service.');
     Suggestion.find({ suggestedBy: sender })
         .then((suggestions) => {
@@ -89,8 +88,11 @@ bot.onText(/\/removesuggestion/, (msg, match) => {
 });
 
 bot.on('callback_query', (cbQuery) => {
+    console.log(cbQuery);
     switch (cbQuery.message.text) {
         case 'Add to Category':
+            if (sender != cbQuery.from.username)
+                return bot.sendMessage(cbQuery.message.chat.id, 'You do not have the right to perform this action, @' + cbQuery.message.from.username);
             category = cbQuery.data;
             const newSuggestion = new Suggestion({
                 suggestedBy: sender,
@@ -141,4 +143,3 @@ bot.on('callback_query', (cbQuery) => {
     }
     bot.deleteMessage(cbQuery.message.chat.id, cbQuery.message.message_id);
 });
-
